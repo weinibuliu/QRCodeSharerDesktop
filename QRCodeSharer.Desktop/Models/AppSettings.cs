@@ -1,8 +1,14 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace QRCodeSharer.Desktop.Models;
+
+// JSON 源代码生成器，支持裁剪
+[JsonSerializable(typeof(AppSettings))]
+[JsonSourceGenerationOptions(WriteIndented = true)]
+internal partial class AppSettingsContext : JsonSerializerContext;
 
 public class AppSettings
 {
@@ -24,7 +30,7 @@ public class AppSettings
             if (File.Exists(SettingsPath))
             {
                 var json = File.ReadAllText(SettingsPath);
-                return JsonSerializer.Deserialize<AppSettings>(json) ?? new AppSettings();
+                return JsonSerializer.Deserialize(json, AppSettingsContext.Default.AppSettings) ?? new AppSettings();
             }
         }
         catch { }
@@ -37,7 +43,7 @@ public class AppSettings
         {
             var dir = Path.GetDirectoryName(SettingsPath)!;
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-            File.WriteAllText(SettingsPath, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(SettingsPath, JsonSerializer.Serialize(this, AppSettingsContext.Default.AppSettings));
         }
         catch { }
     }

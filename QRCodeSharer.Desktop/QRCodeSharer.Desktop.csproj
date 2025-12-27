@@ -16,7 +16,7 @@
   <ItemGroup>
     <TrimmerRootAssembly Include="QRCodeSharer.Desktop" />
     <TrimmerRootAssembly Include="Avalonia.Themes.Fluent" />
-    <TrimmerRootAssembly Include="FluentAvaloniaUI" />
+    <TrimmerRootAssembly Include="FluentAvalonia" />
   </ItemGroup>
   
   <!-- Preserve types used by XAML/reflection -->

@@ -19,6 +19,10 @@ public class CodeResult
     public long? UpdateAt { get; set; }
 }
 
+// JSON 源代码生成器，支持裁剪
+[JsonSerializable(typeof(CodeResult))]
+internal partial class ServiceJsonContext : JsonSerializerContext;
+
 public class QRCodeService
 {
     private static readonly HttpClient _http = new(new SocketsHttpHandler
@@ -86,7 +90,7 @@ public class QRCodeService
             
             var json = await response.Content.ReadAsStringAsync();
             sw.Stop();
-            var result = JsonSerializer.Deserialize<CodeResult>(json);
+            var result = JsonSerializer.Deserialize(json, ServiceJsonContext.Default.CodeResult);
             return (true, result?.Content, "下载成功", code, sw.ElapsedMilliseconds);
         }
         catch (Exception ex)

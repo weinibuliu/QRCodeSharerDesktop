@@ -8,7 +8,7 @@
   <assembly fullname="Avalonia.Controls" preserve="all" />
   <assembly fullname="Avalonia.Markup.Xaml" preserve="all" />
   <assembly fullname="Avalonia.Themes.Fluent" preserve="all" />
-  <assembly fullname="FluentAvaloniaUI" preserve="all" />
+  <assembly fullname="FluentAvalonia" preserve="all" />
   
   <!-- Preserve ReactiveUI -->
   <assembly fullname="Avalonia.ReactiveUI" preserve="all" />
