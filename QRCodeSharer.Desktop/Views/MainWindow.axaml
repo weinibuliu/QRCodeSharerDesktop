@@ -65,7 +65,7 @@
 
             <Button Command="{Binding TogglePollingCommand}"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
-                    Padding="16,10" MinWidth="200">
+                    Padding="16,10" MinWidth="200" Classes="accent">
                 <Panel>
                     <TextBlock Text="开始同步" IsVisible="{Binding !IsPolling}"/>
                     <TextBlock Text="停止同步" IsVisible="{Binding IsPolling}"/>
@@ -189,7 +189,8 @@
             
             <Button Content="测试连接" Command="{Binding TestConnectionCommand}" 
                     Margin="0,8,0,0" Padding="16,8" HorizontalAlignment="Stretch"
-                    IsEnabled="{Binding CanEditSettings}"/>
+                    HorizontalContentAlignment="Center"
+                    IsEnabled="{Binding CanEditSettings}" Classes="accent"/>
         </StackPanel>
     </Grid>
 </Window>

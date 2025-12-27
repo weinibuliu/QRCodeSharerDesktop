@@ -1,8 +1,20 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="QRCodeSharer.Desktop.App"
+             ActualThemeVariantChanged="OnActualThemeVariantChanged"
              RequestedThemeVariant="Default">
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
+    <Application.Resources>
+        <ResourceDictionary>
+            <Color x:Key="SystemAccentColor">#0078D4</Color>
+            <Color x:Key="SystemAccentColorLight1">#429CE3</Color>
+            <Color x:Key="SystemAccentColorLight2">#6CB8EB</Color>
+            <Color x:Key="SystemAccentColorLight3">#96D4F4</Color>
+            <Color x:Key="SystemAccentColorDark1">#005A9E</Color>
+            <Color x:Key="SystemAccentColorDark2">#004578</Color>
+            <Color x:Key="SystemAccentColorDark3">#003052</Color>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>
