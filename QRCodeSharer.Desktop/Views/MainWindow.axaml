@@ -11,6 +11,34 @@
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
+    
+    <Window.Styles>
+        <!-- 按钮悬停动画 - 放大 + 透明度变化 -->
+        <Style Selector="Button">
+            <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" Easing="CubicEaseOut"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="RenderTransform" Value="scale(1.05)"/>
+        </Style>
+        <Style Selector="Button:pressed">
+            <Setter Property="RenderTransform" Value="scale(0.95)"/>
+        </Style>
+        
+        <!-- 输入框聚焦动画 -->
+        <Style Selector="TextBox">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
+        </Style>
+    </Window.Styles>
 
     <Grid Margin="20" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
         <!-- 左侧：日志区域（窗口宽度>=850时显示） -->
@@ -98,7 +126,7 @@
                         <TextBlock Text="等待同步" FontSize="13" 
                                    Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
                     </Border>
-                    <Image Source="{Binding QrCodeImage}" 
+                    <Image Source="{Binding QrCodeImage}"
                            Stretch="Uniform" IsVisible="{Binding HasContent}"/>
                 </Panel>
             </Viewbox>
