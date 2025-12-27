@@ -3,50 +3,59 @@
         xmlns:vm="using:QRCodeSharer.Desktop.ViewModels"
         x:Class="QRCodeSharer.Desktop.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="QRCode Sharer" Width="650" Height="480"
-        MinWidth="580" MinHeight="450"
+        Title="QRCode Sharer" Width="680" Height="520"
+        MinWidth="600" MinHeight="480"
         WindowStartupLocation="CenterScreen">
     
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
 
-    <Grid Margin="20" ColumnDefinitions="*,Auto,*" 
-          HorizontalAlignment="Center" VerticalAlignment="Center">
-        <!-- 左侧：同步区域 -->
-        <StackPanel Grid.Column="0" Spacing="12" VerticalAlignment="Center" MinWidth="240">
+    <Grid Margin="20" ColumnDefinitions="*,Auto,Auto">
+        <!-- 左侧：同步区域（自适应） -->
+        <StackPanel Grid.Column="0" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center">
             <TextBlock Text="同步" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
 
             <Button Command="{Binding TogglePollingCommand}"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="12">
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="12"
+                    MinWidth="200">
                 <Panel>
                     <TextBlock Text="开始同步" IsVisible="{Binding !IsPolling}"/>
                     <TextBlock Text="停止同步" IsVisible="{Binding IsPolling}"/>
                 </Panel>
             </Button>
             
-            <!-- 二维码区域 -->
-            <Panel Width="220" Height="220" HorizontalAlignment="Center">
-                <!-- 占位符（模糊） -->
-                <Image Source="{Binding PlaceholderImage}" Width="220" Height="220" 
-                       IsVisible="{Binding !HasContent}" Opacity="0.2">
+            <!-- 二维码区域（可调大小） -->
+            <Panel Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" HorizontalAlignment="Center">
+                <Image Source="{Binding PlaceholderImage}" 
+                       Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" 
+                       IsVisible="{Binding !HasContent}" Stretch="Uniform" Opacity="0.4">
                     <Image.Effect>
-                        <BlurEffect Radius="20"/>
+                        <BlurEffect Radius="15"/>
                     </Image.Effect>
                 </Image>
-                <TextBlock Text="等待同步" IsVisible="{Binding !HasContent}"
-                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                           FontSize="16" Foreground="Gray"/>
-                <!-- 实际二维码 -->
-                <Image Source="{Binding QrCodeImage}" Width="220" Height="220" 
-                       IsVisible="{Binding HasContent}"/>
+                <Border IsVisible="{Binding !HasContent}" Background="#80FFFFFF" 
+                        CornerRadius="4" Padding="12,6"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="等待同步" FontSize="14" Foreground="#555"/>
+                </Border>
+                <Image Source="{Binding QrCodeImage}" 
+                       Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" 
+                       IsVisible="{Binding HasContent}" Stretch="Uniform"/>
             </Panel>
             
-            <!-- 更新时间 -->
+            <!-- 二维码大小调节 -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                <TextBlock Text="大小:" VerticalAlignment="Center" Foreground="Gray" FontSize="12"/>
+                <Button Content="-" Command="{Binding DecreaseQrSizeCommand}" Width="30"/>
+                <TextBlock Text="{Binding QrCodeSize, StringFormat={}{0}px}" 
+                           VerticalAlignment="Center" Width="50" TextAlignment="Center"/>
+                <Button Content="+" Command="{Binding IncreaseQrSizeCommand}" Width="30"/>
+            </StackPanel>
+            
             <TextBlock Text="{Binding LastUpdateTime}" HorizontalAlignment="Center" 
                        Foreground="Gray" FontSize="11" IsVisible="{Binding HasContent}"/>
             
-            <!-- 复制按钮 -->
             <Button Content="复制 URL" Command="{Binding CopyContentCommand}"
                     HorizontalAlignment="Center" IsVisible="{Binding HasContent}"/>
             
@@ -58,7 +67,8 @@
         <Border Grid.Column="1" Width="1" Background="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" Margin="20,0"/>
 
         <!-- 右侧：设置区域 -->
-        <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center" MinWidth="220">
+        <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center" MinWidth="220"
+                    IsEnabled="{Binding CanEditSettings}">
             <TextBlock Text="设置" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
             <StackPanel Spacing="6">
                 <TextBlock Text="主机地址" FontSize="12" Foreground="Gray"/>
@@ -84,7 +94,8 @@
                 <TextBox Text="{Binding Timeout}" Width="80" HorizontalAlignment="Left" LostFocus="OnSettingChanged"/>
             </StackPanel>
             
-            <Button Content="测试连接" Command="{Binding TestConnectionCommand}" Margin="0,12,0,0"/>
+            <Button Content="测试连接" Command="{Binding TestConnectionCommand}" Margin="0,12,0,0"
+                    IsEnabled="{Binding CanEditSettings}"/>
         </StackPanel>
     </Grid>
 </Window>

@@ -33,6 +33,10 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _lastUpdateTime = "";
     [ObservableProperty] private string _serverUrlError = "";
     [ObservableProperty] private string _pollIntervalError = "";
+    [ObservableProperty] private int _qrCodeSize = 220;
+    [ObservableProperty] private bool _isBusy;
+
+    public bool CanEditSettings => !IsPolling && !IsBusy;
 
     public MainViewModel()
     {
@@ -43,6 +47,7 @@ public partial class MainViewModel : ObservableObject
         FollowUserId = settings.FollowUserId.ToString();
         PollInterval = settings.PollInterval.ToString();
         Timeout = settings.Timeout.ToString();
+        QrCodeSize = settings.QrCodeSize;
         
         GeneratePlaceholder();
     }
@@ -65,7 +70,8 @@ public partial class MainViewModel : ObservableObject
         AuthKey = AuthKey,
         FollowUserId = int.TryParse(FollowUserId, out var fid) ? fid : 0,
         PollInterval = int.TryParse(PollInterval, out var pi) ? pi : 500,
-        Timeout = int.TryParse(Timeout, out var t) ? t : 5000
+        Timeout = int.TryParse(Timeout, out var t) ? t : 5000,
+        QrCodeSize = QrCodeSize
     };
 
     private bool ValidateServerUrl()
@@ -111,8 +117,18 @@ public partial class MainViewModel : ObservableObject
             Status = "服务器地址格式错误";
             return;
         }
-        var (_, msg) = await _service.TestConnectionAsync(GetSettings());
-        Status = msg;
+        IsBusy = true;
+        OnPropertyChanged(nameof(CanEditSettings));
+        try
+        {
+            var (_, msg) = await _service.TestConnectionAsync(GetSettings());
+            Status = msg;
+        }
+        finally
+        {
+            IsBusy = false;
+            OnPropertyChanged(nameof(CanEditSettings));
+        }
     }
 
     [RelayCommand]
@@ -126,6 +142,26 @@ public partial class MainViewModel : ObservableObject
         {
             await clipboard.SetTextAsync(DownloadedContent);
             Status = "已复制到剪贴板";
+        }
+    }
+
+    [RelayCommand]
+    private void IncreaseQrSize()
+    {
+        if (QrCodeSize < 400)
+        {
+            QrCodeSize += 20;
+            SaveSettings();
+        }
+    }
+
+    [RelayCommand]
+    private void DecreaseQrSize()
+    {
+        if (QrCodeSize > 150)
+        {
+            QrCodeSize -= 20;
+            SaveSettings();
         }
     }
 
@@ -151,6 +187,7 @@ public partial class MainViewModel : ObservableObject
     {
         _pollCts = new CancellationTokenSource();
         IsPolling = true;
+        OnPropertyChanged(nameof(CanEditSettings));
         Status = "同步已启动";
         _ = PollLoopAsync(_pollCts.Token);
     }
@@ -160,6 +197,7 @@ public partial class MainViewModel : ObservableObject
         _pollCts?.Cancel();
         _pollCts = null;
         IsPolling = false;
+        OnPropertyChanged(nameof(CanEditSettings));
         Status = "同步已停止";
     }
 
@@ -171,17 +209,22 @@ public partial class MainViewModel : ObservableObject
         {
             try
             {
-                var (success, content, _) = await _service.DownloadAsync(GetSettings());
+                var (success, content, _, elapsedMs) = await _service.DownloadAsync(GetSettings());
                 if (success && !string.IsNullOrEmpty(content) && content != DownloadedContent)
                 {
                     DownloadedContent = content;
                     GenerateQRCode(content);
                     HasContent = true;
-                    LastUpdateTime = $"更新于 {DateTime.Now:HH:mm:ss}";
+                    LastUpdateTime = $"更新于 {DateTime.Now:HH:mm:ss} ({elapsedMs}ms)";
                     Status = "同步中...";
                 }
                 
-                await Task.Delay(intervalMs, ct);
+                // 补足间隔时间
+                var sleepMs = intervalMs - (int)elapsedMs;
+                if (sleepMs > 0)
+                {
+                    await Task.Delay(sleepMs, ct);
+                }
             }
             catch (OperationCanceledException)
             {
