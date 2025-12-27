@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <!-- Preserve all types in the main assembly -->
+  <assembly fullname="QRCodeSharer.Desktop" preserve="all" />
+  
+  <!-- Preserve Avalonia types needed for XAML -->
+  <assembly fullname="Avalonia.Base" preserve="all" />
+  <assembly fullname="Avalonia.Controls" preserve="all" />
+  <assembly fullname="Avalonia.Markup.Xaml" preserve="all" />
+  <assembly fullname="Avalonia.Themes.Fluent" preserve="all" />
+  <assembly fullname="FluentAvaloniaUI" preserve="all" />
+  
+  <!-- Preserve ReactiveUI -->
+  <assembly fullname="Avalonia.ReactiveUI" preserve="all" />
+  <assembly fullname="ReactiveUI" preserve="all" />
+</linker>

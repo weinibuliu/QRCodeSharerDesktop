@@ -63,7 +63,7 @@ jobs:
         }
     
     - name: Publish
-      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TrimMode=partial -o publish
+      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release -p:PublishSingleFile=true -p:PublishTrimmed=true -p:TrimMode=partial -p:SuppressTrimAnalysisWarnings=false -o publish
     
     - name: Upload artifact
       uses: actions/upload-artifact@v5
