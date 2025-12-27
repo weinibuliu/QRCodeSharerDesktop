@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,16 @@ using QRCoder;
 
 namespace QRCodeSharer.Desktop.ViewModels;
 
+public enum StatusType { Info, Success, Error }
+
+public class LogEntry
+{
+    public string Time { get; set; } = "";
+    public string Request { get; set; } = "";
+    public string Result { get; set; } = "";
+    public bool IsSuccess { get; set; }
+}
+
 public partial class MainViewModel : ObservableObject
 {
     private readonly QRCodeService _service = new();
@@ -25,6 +36,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _pollInterval = "500";
     [ObservableProperty] private string _timeout = "5000";
     [ObservableProperty] private string _status = "";
+    [ObservableProperty] private StatusType _statusType = StatusType.Info;
     [ObservableProperty] private string _downloadedContent = "";
     [ObservableProperty] private Bitmap? _qrCodeImage;
     [ObservableProperty] private Bitmap? _placeholderImage;
@@ -35,6 +47,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _pollIntervalError = "";
     [ObservableProperty] private int _qrCodeSize = 250;
     [ObservableProperty] private bool _isBusy;
+    
+    public ObservableCollection<LogEntry> Logs { get; } = new();
+    private const int MaxLogs = 100;
 
     public bool CanEditSettings => !IsPolling && !IsBusy;
 
@@ -109,20 +124,43 @@ public partial class MainViewModel : ObservableObject
         GetSettings().Save();
     }
 
+    private void SetStatus(string message, StatusType type = StatusType.Info)
+    {
+        Status = message;
+        StatusType = type;
+    }
+
+    private void AddLog(string request, string result, bool isSuccess)
+    {
+        var entry = new LogEntry
+        {
+            Time = DateTime.Now.ToString("HH:mm:ss"),
+            Request = request,
+            Result = result,
+            IsSuccess = isSuccess
+        };
+        Logs.Insert(0, entry);
+        while (Logs.Count > MaxLogs) Logs.RemoveAt(Logs.Count - 1);
+    }
+
+    [RelayCommand]
+    private void ClearLogs() => Logs.Clear();
+
     [RelayCommand]
     private async Task TestConnectionAsync()
     {
         if (!ValidateServerUrl())
         {
-            Status = "服务器地址格式错误";
+            SetStatus("服务器地址格式错误", StatusType.Error);
             return;
         }
         IsBusy = true;
         OnPropertyChanged(nameof(CanEditSettings));
         try
         {
-            var (_, msg) = await _service.TestConnectionAsync(GetSettings());
-            Status = msg;
+            var (success, msg) = await _service.TestConnectionAsync(GetSettings());
+            AddLog("GET /", msg, success);
+            SetStatus(msg, success ? StatusType.Success : StatusType.Error);
         }
         finally
         {
@@ -141,7 +179,7 @@ public partial class MainViewModel : ObservableObject
         if (clipboard != null)
         {
             await clipboard.SetTextAsync(DownloadedContent);
-            Status = "已复制到剪贴板";
+            SetStatus("已复制到剪贴板", StatusType.Success);
         }
     }
 
@@ -161,7 +199,7 @@ public partial class MainViewModel : ObservableObject
         {
             if (!ValidateServerUrl() || !ValidatePollInterval())
             {
-                Status = "请检查设置";
+                SetStatus("请检查设置", StatusType.Error);
                 return;
             }
             StartPolling();
@@ -173,7 +211,7 @@ public partial class MainViewModel : ObservableObject
         _pollCts = new CancellationTokenSource();
         IsPolling = true;
         OnPropertyChanged(nameof(CanEditSettings));
-        Status = "同步已启动";
+        SetStatus("同步已启动", StatusType.Success);
         _ = PollLoopAsync(_pollCts.Token);
     }
 
@@ -183,7 +221,7 @@ public partial class MainViewModel : ObservableObject
         _pollCts = null;
         IsPolling = false;
         OnPropertyChanged(nameof(CanEditSettings));
-        Status = "同步已停止";
+        SetStatus("同步已停止", StatusType.Info);
     }
 
     private async Task PollLoopAsync(CancellationToken ct)
@@ -194,14 +232,16 @@ public partial class MainViewModel : ObservableObject
         {
             try
             {
-                var (success, content, _, elapsedMs) = await _service.DownloadAsync(GetSettings());
+                var (success, content, msg, elapsedMs) = await _service.DownloadAsync(GetSettings());
+                AddLog("GET /code/get", success ? $"{elapsedMs}ms" : msg, success);
+                
                 if (success && !string.IsNullOrEmpty(content) && content != DownloadedContent)
                 {
                     DownloadedContent = content;
                     GenerateQRCode(content);
                     HasContent = true;
                     LastUpdateTime = $"更新于 {DateTime.Now:HH:mm:ss} ({elapsedMs}ms)";
-                    Status = "同步中...";
+                    SetStatus("同步中...", StatusType.Info);
                 }
                 
                 // 补足间隔时间
@@ -217,7 +257,7 @@ public partial class MainViewModel : ObservableObject
             }
             catch
             {
-                Status = "同步出错，将重试...";
+                SetStatus("同步出错，将重试...", StatusType.Error);
                 await Task.Delay(intervalMs, ct);
             }
         }

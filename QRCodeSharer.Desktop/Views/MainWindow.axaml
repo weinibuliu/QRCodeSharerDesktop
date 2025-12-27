@@ -3,7 +3,8 @@
         xmlns:vm="using:QRCodeSharer.Desktop.ViewModels"
         x:Class="QRCodeSharer.Desktop.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="QRCode Sharer" Width="680" Height="520"
+        x:Name="MainWin"
+        Title="QRCode Sharer" Width="900" Height="520"
         MinWidth="600" MinHeight="480"
         WindowStartupLocation="CenterScreen">
     
@@ -11,21 +12,64 @@
         <vm:MainViewModel/>
     </Design.DataContext>
 
-    <Grid Margin="20" ColumnDefinitions="*,Auto,Auto">
-        <!-- 左侧：同步区域（自适应） -->
-        <StackPanel Grid.Column="0" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="同步" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
+    <Grid Margin="20" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+        <!-- 左侧：日志区域（窗口宽度>=850时显示） -->
+        <Border Grid.Column="0" MinWidth="200" MaxWidth="280"
+                IsVisible="{Binding #MainWin.ShowLogPanel}">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                    <TextBlock Text="请求日志" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center"
+                               Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+                    <Button Content="清空" Command="{Binding ClearLogsCommand}" Padding="8,4" FontSize="11"/>
+                </StackPanel>
+                
+                <Border Grid.Row="1" Background="{DynamicResource SystemControlBackgroundListLowBrush}" 
+                        CornerRadius="4" Padding="8">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Logs}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="vm:LogEntry">
+                                    <Border Padding="4,3" Margin="0,1">
+                                        <Grid ColumnDefinitions="50,*,Auto">
+                                            <TextBlock Grid.Column="0" Text="{Binding Time}" FontSize="10" 
+                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                                       FontFamily="Consolas"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Request}" FontSize="10" 
+                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
+                                                       FontFamily="Consolas" Margin="4,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Result}" FontSize="10" 
+                                                       FontFamily="Consolas"
+                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+        
+        <!-- 日志与同步区域分隔线 -->
+        <Border Grid.Column="1" Width="1" 
+                Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Margin="16,0"
+                IsVisible="{Binding #MainWin.ShowLogPanel}"/>
+
+        <!-- 中间：同步区域 -->
+        <StackPanel Grid.Column="2" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="同步" FontWeight="SemiBold" FontSize="16" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
 
             <Button Command="{Binding TogglePollingCommand}"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="12"
-                    MinWidth="200">
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                    Padding="16,10" MinWidth="200">
                 <Panel>
                     <TextBlock Text="开始同步" IsVisible="{Binding !IsPolling}"/>
                     <TextBlock Text="停止同步" IsVisible="{Binding IsPolling}"/>
                 </Panel>
             </Button>
             
-            <!-- 二维码区域（可调大小） -->
+            <!-- 二维码区域 -->
             <Panel Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" HorizontalAlignment="Center">
                 <Image Source="{Binding PlaceholderImage}" 
                        Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" 
@@ -34,10 +78,12 @@
                         <BlurEffect Radius="15"/>
                     </Image.Effect>
                 </Image>
-                <Border IsVisible="{Binding !HasContent}" Background="#80FFFFFF" 
+                <Border IsVisible="{Binding !HasContent}" 
+                        Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
                         CornerRadius="4" Padding="12,6"
                         HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="等待同步" FontSize="14" Foreground="#555"/>
+                    <TextBlock Text="等待同步" FontSize="13" 
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
                 </Border>
                 <Image Source="{Binding QrCodeImage}" 
                        Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" 
@@ -46,55 +92,100 @@
             
             <!-- 二维码大小调节 -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
-                <TextBlock Text="大小:" VerticalAlignment="Center" Foreground="Gray" FontSize="12"/>
+                <TextBlock Text="大小:" VerticalAlignment="Center" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" FontSize="12"/>
                 <Slider Value="{Binding QrCodeSize}" Minimum="200" Maximum="400" 
                         Width="120" VerticalAlignment="Center" TickFrequency="20" IsSnapToTickEnabled="True"/>
                 <TextBlock Text="{Binding QrCodeSize, StringFormat={}{0}px}" 
-                           VerticalAlignment="Center" Width="45" TextAlignment="Center" FontSize="12"/>
+                           VerticalAlignment="Center" Width="45" TextAlignment="Center" FontSize="12"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
             </StackPanel>
             
+            <!-- 更新时间 -->
             <TextBlock Text="{Binding LastUpdateTime}" HorizontalAlignment="Center" 
-                       Foreground="Gray" FontSize="11" IsVisible="{Binding HasContent}"/>
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                       FontSize="12" IsVisible="{Binding HasContent}"/>
             
             <Button Content="复制 URL" Command="{Binding CopyContentCommand}"
-                    HorizontalAlignment="Center" IsVisible="{Binding HasContent}"/>
+                    HorizontalAlignment="Center" Padding="16,8" IsVisible="{Binding HasContent}"/>
             
-            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Foreground="Gray" FontSize="11" 
-                       HorizontalAlignment="Center" Margin="0,8,0,0"/>
+            <!-- 状态提示 -->
+            <Panel IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                   HorizontalAlignment="Center" MinWidth="180">
+                <Border Background="{DynamicResource SystemControlBackgroundListLowBrush}"
+                        CornerRadius="4" Padding="12,8"
+                        IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Info}}">
+                    <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                               HorizontalAlignment="Center"/>
+                </Border>
+                <Border Background="#1A107C10" BorderBrush="#107C10" BorderThickness="1"
+                        CornerRadius="4" Padding="12,8"
+                        IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Success}}">
+                    <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
+                               Foreground="#107C10" HorizontalAlignment="Center"/>
+                </Border>
+                <Border Background="#1AE81123" BorderBrush="#E81123" BorderThickness="1"
+                        CornerRadius="4" Padding="12,8"
+                        IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Error}}">
+                    <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
+                               Foreground="#E81123" HorizontalAlignment="Center"/>
+                </Border>
+            </Panel>
         </StackPanel>
 
         <!-- 分隔线 -->
-        <Border Grid.Column="1" Width="1" Background="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" Margin="20,0"/>
+        <Border Grid.Column="3" Width="1" 
+                Background="{DynamicResource SystemControlForegroundBaseLowBrush}" Margin="20,0"/>
 
         <!-- 右侧：设置区域 -->
-        <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center" MinWidth="220"
+        <StackPanel Grid.Column="4" Spacing="10" VerticalAlignment="Center" MinWidth="220"
                     IsEnabled="{Binding CanEditSettings}">
-            <TextBlock Text="设置" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
-            <StackPanel Spacing="6">
-                <TextBlock Text="主机地址" FontSize="12" Foreground="Gray"/>
+            <TextBlock Text="设置" FontWeight="SemiBold" FontSize="16" HorizontalAlignment="Center"
+                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+            
+            <StackPanel Spacing="4">
+                <TextBlock Text="主机地址" FontSize="12" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
                 <TextBox Text="{Binding ServerUrl}" Watermark="https://example.com" LostFocus="OnSettingChanged"/>
-                <TextBlock Text="{Binding ServerUrlError}" Foreground="Red" FontSize="11" 
+                <TextBlock Text="{Binding ServerUrlError}" Foreground="#E81123" FontSize="11" 
                            IsVisible="{Binding ServerUrlError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                
-                <TextBlock Text="用户ID" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
-                <TextBox Text="{Binding UserId}" Watermark="你的用户ID" LostFocus="OnSettingChanged"/>
-                
-                <TextBlock Text="认证密钥" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
-                <TextBox Text="{Binding AuthKey}" PasswordChar="*" Watermark="你的认证密钥" LostFocus="OnSettingChanged"/>
-                
-                <TextBlock Text="订阅ID" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
-                <TextBox Text="{Binding FollowUserId}" Watermark="要订阅的用户ID" LostFocus="OnSettingChanged"/>
-                
-                <TextBlock Text="轮询间隔（毫秒）" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
-                <TextBox Text="{Binding PollInterval}" Width="80" HorizontalAlignment="Left" LostFocus="OnSettingChanged"/>
-                <TextBlock Text="{Binding PollIntervalError}" Foreground="Red" FontSize="11"
-                           IsVisible="{Binding PollIntervalError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                
-                <TextBlock Text="连接超时（毫秒）" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
-                <TextBox Text="{Binding Timeout}" Width="80" HorizontalAlignment="Left" LostFocus="OnSettingChanged"/>
             </StackPanel>
             
-            <Button Content="测试连接" Command="{Binding TestConnectionCommand}" Margin="0,12,0,0"
+            <StackPanel Spacing="4">
+                <TextBlock Text="用户 ID" FontSize="12" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBox Text="{Binding UserId}" Watermark="你的用户 ID" LostFocus="OnSettingChanged"/>
+            </StackPanel>
+            
+            <StackPanel Spacing="4">
+                <TextBlock Text="认证密钥" FontSize="12" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBox Text="{Binding AuthKey}" PasswordChar="•" Watermark="你的认证密钥" LostFocus="OnSettingChanged"/>
+            </StackPanel>
+            
+            <StackPanel Spacing="4">
+                <TextBlock Text="订阅 ID" FontSize="12" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBox Text="{Binding FollowUserId}" Watermark="要订阅的用户 ID" LostFocus="OnSettingChanged"/>
+            </StackPanel>
+            
+            <StackPanel Spacing="4">
+                <TextBlock Text="轮询间隔（毫秒）" FontSize="12" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBox Text="{Binding PollInterval}" Width="100" HorizontalAlignment="Left" LostFocus="OnSettingChanged"/>
+                <TextBlock Text="{Binding PollIntervalError}" Foreground="#E81123" FontSize="11"
+                           IsVisible="{Binding PollIntervalError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            </StackPanel>
+            
+            <StackPanel Spacing="4">
+                <TextBlock Text="连接超时（毫秒）" FontSize="12" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBox Text="{Binding Timeout}" Width="100" HorizontalAlignment="Left" LostFocus="OnSettingChanged"/>
+            </StackPanel>
+            
+            <Button Content="测试连接" Command="{Binding TestConnectionCommand}" 
+                    Margin="0,8,0,0" Padding="16,8" HorizontalAlignment="Stretch"
                     IsEnabled="{Binding CanEditSettings}"/>
         </StackPanel>
     </Grid>
