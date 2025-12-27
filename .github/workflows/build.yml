@@ -66,8 +66,13 @@ jobs:
         }
     
     - name: Publish
-      if: steps.release-type.outputs.is_release == 'true'
       run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: QRCodeSharer-${{ github.ref_name }}
+        path: publish/QRCodeSharer.Desktop.exe
     
     - name: Upload to GitHub Release
       if: steps.release-type.outputs.is_release == 'true'
