@@ -11,6 +11,7 @@ obj/
 # NuGet
 *.nupkg
 packages/
+publish
 
 # OS
 .DS_Store

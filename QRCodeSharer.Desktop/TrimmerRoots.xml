@@ -3,14 +3,45 @@
   <!-- Preserve all types in the main assembly -->
   <assembly fullname="QRCodeSharer.Desktop" preserve="all" />
   
-  <!-- Preserve Avalonia types needed for XAML -->
+  <!-- Preserve ALL Avalonia assemblies -->
+  <assembly fullname="Avalonia" preserve="all" />
   <assembly fullname="Avalonia.Base" preserve="all" />
   <assembly fullname="Avalonia.Controls" preserve="all" />
+  <assembly fullname="Avalonia.Controls.DataGrid" preserve="all" />
+  <assembly fullname="Avalonia.Desktop" preserve="all" />
+  <assembly fullname="Avalonia.DesignerSupport" preserve="all" />
+  <assembly fullname="Avalonia.Dialogs" preserve="all" />
+  <assembly fullname="Avalonia.Fonts.Inter" preserve="all" />
+  <assembly fullname="Avalonia.Markup" preserve="all" />
   <assembly fullname="Avalonia.Markup.Xaml" preserve="all" />
+  <assembly fullname="Avalonia.Metal" preserve="all" />
+  <assembly fullname="Avalonia.MicroCom" preserve="all" />
+  <assembly fullname="Avalonia.OpenGL" preserve="all" />
+  <assembly fullname="Avalonia.Remote.Protocol" preserve="all" />
+  <assembly fullname="Avalonia.Skia" preserve="all" />
   <assembly fullname="Avalonia.Themes.Fluent" preserve="all" />
-  <assembly fullname="FluentAvalonia" preserve="all" />
+  <assembly fullname="Avalonia.Themes.Simple" preserve="all" />
+  <assembly fullname="Avalonia.Win32" preserve="all" />
+  <assembly fullname="Avalonia.X11" preserve="all" />
   
-  <!-- Preserve ReactiveUI -->
+  <!-- Preserve FluentAvalonia -->
+  <assembly fullname="FluentAvalonia" preserve="all" />
+  <assembly fullname="FluentAvaloniaUI" preserve="all" />
+  
+  <!-- Preserve ReactiveUI and dependencies -->
   <assembly fullname="Avalonia.ReactiveUI" preserve="all" />
   <assembly fullname="ReactiveUI" preserve="all" />
+  <assembly fullname="Splat" preserve="all" />
+  <assembly fullname="DynamicData" preserve="all" />
+  <assembly fullname="System.Reactive" preserve="all" />
+  
+  <!-- Preserve CommunityToolkit.Mvvm -->
+  <assembly fullname="CommunityToolkit.Mvvm" preserve="all" />
+  
+  <!-- Preserve QRCoder -->
+  <assembly fullname="QRCoder" preserve="all" />
+  
+  <!-- Preserve System assemblies that may be needed -->
+  <assembly fullname="System.Text.Json" preserve="all" />
+  <assembly fullname="Microsoft.Win32.Registry" preserve="all" />
 </linker>
