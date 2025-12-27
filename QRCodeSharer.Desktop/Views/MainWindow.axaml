@@ -66,83 +66,77 @@
                 IsVisible="{Binding #MainWin.ShowLogPanel}"/>
 
         <!-- 中间：同步区域 -->
-        <StackPanel Grid.Column="2" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="同步" FontWeight="SemiBold" FontSize="16" HorizontalAlignment="Center"
-                       Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+        <Grid Grid.Column="2" RowDefinitions="Auto,*,Auto" Margin="10,0">
+            <StackPanel Grid.Row="0" Spacing="12" HorizontalAlignment="Center">
+                <TextBlock Text="同步" FontWeight="SemiBold" FontSize="16" HorizontalAlignment="Center"
+                           Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
 
-            <Button Command="{Binding TogglePollingCommand}"
-                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
-                    Padding="16,10" MinWidth="200" Classes="accent">
-                <Panel>
-                    <TextBlock Text="开始同步" IsVisible="{Binding !IsPolling}"/>
-                    <TextBlock Text="停止同步" IsVisible="{Binding IsPolling}"/>
-                </Panel>
-            </Button>
-            
-            <!-- 二维码区域 -->
-            <Panel Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" HorizontalAlignment="Center">
-                <Image Source="{Binding PlaceholderImage}" 
-                       Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" 
-                       IsVisible="{Binding !HasContent}" Stretch="Uniform" Opacity="0.4">
-                    <Image.Effect>
-                        <BlurEffect Radius="15"/>
-                    </Image.Effect>
-                </Image>
-                <Border IsVisible="{Binding !HasContent}" 
-                        Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
-                        CornerRadius="4" Padding="12,6"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="等待同步" FontSize="13" 
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
-                </Border>
-                <Image Source="{Binding QrCodeImage}" 
-                       Width="{Binding QrCodeSize}" Height="{Binding QrCodeSize}" 
-                       IsVisible="{Binding HasContent}" Stretch="Uniform"/>
-            </Panel>
-            
-            <!-- 二维码大小调节 -->
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
-                <TextBlock Text="大小:" VerticalAlignment="Center" 
-                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" FontSize="12"/>
-                <Slider Value="{Binding QrCodeSize}" Minimum="200" Maximum="400" 
-                        Width="120" VerticalAlignment="Center" TickFrequency="20" IsSnapToTickEnabled="True"/>
-                <TextBlock Text="{Binding QrCodeSize, StringFormat={}{0}px}" 
-                           VerticalAlignment="Center" Width="45" TextAlignment="Center" FontSize="12"
-                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <Button Command="{Binding TogglePollingCommand}"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                        Padding="16,10" MinWidth="200" Classes="accent">
+                    <Panel>
+                        <TextBlock Text="开始同步" IsVisible="{Binding !IsPolling}"/>
+                        <TextBlock Text="停止同步" IsVisible="{Binding IsPolling}"/>
+                    </Panel>
+                </Button>
             </StackPanel>
             
-            <!-- 更新时间 -->
-            <TextBlock Text="{Binding LastUpdateTime}" HorizontalAlignment="Center" 
-                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
-                       FontSize="12" IsVisible="{Binding HasContent}"/>
+            <!-- 二维码区域（自适应可用空间） -->
+            <Viewbox Grid.Row="1" Stretch="Uniform" StretchDirection="DownOnly" 
+                     MaxWidth="400" MaxHeight="400" Margin="0,12">
+                <Panel Width="400" Height="400">
+                    <Image Source="{Binding PlaceholderImage}" 
+                           Stretch="Uniform" IsVisible="{Binding !HasContent}" Opacity="0.4">
+                        <Image.Effect>
+                            <BlurEffect Radius="15"/>
+                        </Image.Effect>
+                    </Image>
+                    <Border IsVisible="{Binding !HasContent}" 
+                            Background="{DynamicResource SystemControlBackgroundAltHighBrush}" 
+                            CornerRadius="4" Padding="12,6"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="等待同步" FontSize="13" 
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                    </Border>
+                    <Image Source="{Binding QrCodeImage}" 
+                           Stretch="Uniform" IsVisible="{Binding HasContent}"/>
+                </Panel>
+            </Viewbox>
             
-            <Button Content="复制 URL" Command="{Binding CopyContentCommand}"
-                    HorizontalAlignment="Center" Padding="16,8" IsVisible="{Binding HasContent}"/>
-            
-            <!-- 状态提示 -->
-            <Panel IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                   HorizontalAlignment="Center" MinWidth="180">
-                <Border Background="{DynamicResource SystemControlBackgroundListLowBrush}"
-                        CornerRadius="4" Padding="12,8"
-                        IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Info}}">
-                    <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
-                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
-                               HorizontalAlignment="Center"/>
-                </Border>
-                <Border Background="#1A107C10" BorderBrush="#107C10" BorderThickness="1"
-                        CornerRadius="4" Padding="12,8"
-                        IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Success}}">
-                    <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
-                               Foreground="#107C10" HorizontalAlignment="Center"/>
-                </Border>
-                <Border Background="#1AE81123" BorderBrush="#E81123" BorderThickness="1"
-                        CornerRadius="4" Padding="12,8"
-                        IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Error}}">
-                    <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
-                               Foreground="#E81123" HorizontalAlignment="Center"/>
-                </Border>
-            </Panel>
-        </StackPanel>
+            <StackPanel Grid.Row="2" Spacing="8" HorizontalAlignment="Center">
+                <!-- 更新时间 -->
+                <TextBlock Text="{Binding LastUpdateTime}" HorizontalAlignment="Center" 
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                           FontSize="12" IsVisible="{Binding HasContent}"/>
+                
+                <Button Content="复制 URL" Command="{Binding CopyContentCommand}"
+                        HorizontalAlignment="Center" Padding="16,8" IsVisible="{Binding HasContent}"/>
+                
+                <!-- 状态提示 -->
+                <Panel IsVisible="{Binding Status, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                       HorizontalAlignment="Center" MinWidth="180">
+                    <Border Background="{DynamicResource SystemControlBackgroundListLowBrush}"
+                            CornerRadius="4" Padding="12,8"
+                            IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Info}}">
+                        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#1A107C10" BorderBrush="#107C10" BorderThickness="1"
+                            CornerRadius="4" Padding="12,8"
+                            IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Success}}">
+                        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
+                                   Foreground="#107C10" HorizontalAlignment="Center"/>
+                    </Border>
+                    <Border Background="#1AE81123" BorderBrush="#E81123" BorderThickness="1"
+                            CornerRadius="4" Padding="12,8"
+                            IsVisible="{Binding StatusType, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:StatusType.Error}}">
+                        <TextBlock Text="{Binding Status}" TextWrapping="Wrap" FontSize="12" 
+                                   Foreground="#E81123" HorizontalAlignment="Center"/>
+                    </Border>
+                </Panel>
+            </StackPanel>
+        </Grid>
 
         <!-- 分隔线 -->
         <Border Grid.Column="3" Width="1" 

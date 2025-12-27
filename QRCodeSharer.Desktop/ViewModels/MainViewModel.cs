@@ -67,7 +67,6 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _lastUpdateTime = "";
     [ObservableProperty] private string _serverUrlError = "";
     [ObservableProperty] private string _pollIntervalError = "";
-    [ObservableProperty] private int _qrCodeSize = 250;
     [ObservableProperty] private bool _isBusy;
     
     public ObservableCollection<LogEntry> Logs { get; } = new();
@@ -84,7 +83,6 @@ public partial class MainViewModel : ObservableObject
         FollowUserId = settings.FollowUserId.ToString();
         PollInterval = settings.PollInterval.ToString();
         Timeout = settings.Timeout.ToString();
-        QrCodeSize = settings.QrCodeSize;
         
         GeneratePlaceholder();
     }
@@ -107,8 +105,7 @@ public partial class MainViewModel : ObservableObject
         AuthKey = AuthKey,
         FollowUserId = int.TryParse(FollowUserId, out var fid) ? fid : 0,
         PollInterval = int.TryParse(PollInterval, out var pi) ? pi : 500,
-        Timeout = int.TryParse(Timeout, out var t) ? t : 5000,
-        QrCodeSize = QrCodeSize
+        Timeout = int.TryParse(Timeout, out var t) ? t : 5000
     };
 
     private bool ValidateServerUrl()
@@ -206,11 +203,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    partial void OnQrCodeSizeChanged(int value)
-    {
-        SaveSettings();
-    }
-
     [RelayCommand]
     private async Task TogglePollingAsync()
     {
@@ -277,13 +269,24 @@ public partial class MainViewModel : ObservableObject
                 var (success, content, msg, statusCode, elapsedMs) = await _service.DownloadAsync(GetSettings());
                 AddLog("GET /code/get", statusCode, elapsedMs, success);
                 
-                if (success && !string.IsNullOrEmpty(content) && content != DownloadedContent)
+                if (success && !string.IsNullOrEmpty(content))
                 {
-                    DownloadedContent = content;
-                    GenerateQRCode(content);
-                    HasContent = true;
-                    LastUpdateTime = $"更新于 {DateTime.Now:HH:mm:ss} ({elapsedMs}ms)";
-                    SetStatus("同步中...", StatusType.Info);
+                    if (content != DownloadedContent)
+                    {
+                        DownloadedContent = content;
+                        GenerateQRCode(content);
+                        HasContent = true;
+                        LastUpdateTime = $"更新于 {DateTime.Now:HH:mm:ss}";
+                        SetStatus($"内容已更新 ({elapsedMs}ms)", StatusType.Success);
+                    }
+                    else
+                    {
+                        SetStatus($"内容无变化 ({elapsedMs}ms)", StatusType.Info);
+                    }
+                }
+                else if (!success)
+                {
+                    SetStatus($"{msg} ({elapsedMs}ms)", StatusType.Error);
                 }
                 
                 // 补足间隔时间
