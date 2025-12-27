@@ -33,7 +33,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _lastUpdateTime = "";
     [ObservableProperty] private string _serverUrlError = "";
     [ObservableProperty] private string _pollIntervalError = "";
-    [ObservableProperty] private int _qrCodeSize = 220;
+    [ObservableProperty] private int _qrCodeSize = 250;
     [ObservableProperty] private bool _isBusy;
 
     public bool CanEditSettings => !IsPolling && !IsBusy;
@@ -145,24 +145,9 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void IncreaseQrSize()
+    partial void OnQrCodeSizeChanged(int value)
     {
-        if (QrCodeSize < 400)
-        {
-            QrCodeSize += 20;
-            SaveSettings();
-        }
-    }
-
-    [RelayCommand]
-    private void DecreaseQrSize()
-    {
-        if (QrCodeSize > 150)
-        {
-            QrCodeSize -= 20;
-            SaveSettings();
-        }
+        SaveSettings();
     }
 
     [RelayCommand]

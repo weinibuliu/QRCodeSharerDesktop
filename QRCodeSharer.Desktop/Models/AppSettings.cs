@@ -12,7 +12,7 @@ public class AppSettings
     public int FollowUserId { get; set; }
     public int PollInterval { get; set; } = 500;
     public int Timeout { get; set; } = 5000;
-    public int QrCodeSize { get; set; } = 220;
+    public int QrCodeSize { get; set; } = 250;
 
     private static readonly string SettingsPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
