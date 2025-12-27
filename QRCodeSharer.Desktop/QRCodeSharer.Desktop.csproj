@@ -7,11 +7,20 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     
+<<<<<<< HEAD
+    <!-- SingleFile settings - include native libraries -->
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    
+    <!-- Trimming settings -->
+    <TrimMode>partial</TrimMode>
+    <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+=======
     <!-- Trimming settings - use partial mode for better compatibility -->
     <TrimMode>partial</TrimMode>
     <TrimmerRemoveSymbols>false</TrimmerRemoveSymbols>
     <TrimmerDefaultAction>copy</TrimmerDefaultAction>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+>>>>>>> 654ec5ba01f3305b95112e7ae6a19f879d27062e
   </PropertyGroup>
   
   <!-- Preserve types used by XAML/reflection -->

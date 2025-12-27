@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <linker>
-  <!-- Preserve all types in the main assembly -->
+  <!-- Preserve main assembly -->
   <assembly fullname="QRCodeSharer.Desktop" preserve="all" />
   
+<<<<<<< HEAD
+  <!-- Preserve Avalonia core -->
+  <assembly fullname="Avalonia.Base" preserve="all" />
+  <assembly fullname="Avalonia.Controls" preserve="all" />
+  <assembly fullname="Avalonia.Desktop" preserve="all" />
+=======
   <!-- Preserve ALL Avalonia assemblies -->
   <assembly fullname="Avalonia" preserve="all" />
   <assembly fullname="Avalonia.Base" preserve="all" />
@@ -13,6 +19,7 @@
   <assembly fullname="Avalonia.Dialogs" preserve="all" />
   <assembly fullname="Avalonia.Fonts.Inter" preserve="all" />
   <assembly fullname="Avalonia.Markup" preserve="all" />
+>>>>>>> 654ec5ba01f3305b95112e7ae6a19f879d27062e
   <assembly fullname="Avalonia.Markup.Xaml" preserve="all" />
   <assembly fullname="Avalonia.Metal" preserve="all" />
   <assembly fullname="Avalonia.MicroCom" preserve="all" />
@@ -20,9 +27,17 @@
   <assembly fullname="Avalonia.Remote.Protocol" preserve="all" />
   <assembly fullname="Avalonia.Skia" preserve="all" />
   <assembly fullname="Avalonia.Themes.Fluent" preserve="all" />
+<<<<<<< HEAD
+  <assembly fullname="Avalonia.Skia" preserve="all" />
+  <assembly fullname="Avalonia.Fonts.Inter" preserve="all" />
+  
+  <!-- Preserve FluentAvalonia -->
+  <assembly fullname="FluentAvalonia" preserve="all" />
+=======
   <assembly fullname="Avalonia.Themes.Simple" preserve="all" />
   <assembly fullname="Avalonia.Win32" preserve="all" />
   <assembly fullname="Avalonia.X11" preserve="all" />
+>>>>>>> 654ec5ba01f3305b95112e7ae6a19f879d27062e
   
   <!-- Preserve FluentAvalonia -->
   <assembly fullname="FluentAvalonia" preserve="all" />
@@ -31,6 +46,12 @@
   <!-- Preserve ReactiveUI and dependencies -->
   <assembly fullname="Avalonia.ReactiveUI" preserve="all" />
   <assembly fullname="ReactiveUI" preserve="all" />
+<<<<<<< HEAD
+  
+  <!-- Preserve SkiaSharp -->
+  <assembly fullname="SkiaSharp" preserve="all" />
+  <assembly fullname="HarfBuzzSharp" preserve="all" />
+=======
   <assembly fullname="Splat" preserve="all" />
   <assembly fullname="DynamicData" preserve="all" />
   <assembly fullname="System.Reactive" preserve="all" />
@@ -44,4 +65,5 @@
   <!-- Preserve System assemblies that may be needed -->
   <assembly fullname="System.Text.Json" preserve="all" />
   <assembly fullname="Microsoft.Win32.Registry" preserve="all" />
+>>>>>>> 654ec5ba01f3305b95112e7ae6a19f879d27062e
 </linker>
