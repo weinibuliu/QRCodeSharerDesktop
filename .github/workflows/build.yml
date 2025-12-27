@@ -1,0 +1,78 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+
+  pull_request:
+    branches: [main, master]
+    
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_PATH: QRCodeSharer.Desktop/QRCodeSharer.Desktop.csproj
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.PROJECT_PATH }}
+      env:
+        NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+    
+    - name: Build
+      run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release --no-restore
+    
+    - name: Determine release type
+      id: release-type
+      shell: pwsh
+      run: |
+        $tag = "${{ github.ref_name }}"
+        $isTag = "${{ github.ref_type }}" -eq "tag"
+        
+        if ($isTag -and $tag -match '^v?\d+\.\d+\.\d+') {
+          if ($tag -match '-(alpha|beta|rc|preview|dev)') {
+            echo "type=prerelease" >> $env:GITHUB_OUTPUT
+            echo "is_release=true" >> $env:GITHUB_OUTPUT
+            echo "::notice::This is a PRE-RELEASE build ($tag)"
+          } else {
+            echo "type=release" >> $env:GITHUB_OUTPUT
+            echo "is_release=true" >> $env:GITHUB_OUTPUT
+            echo "::notice::This is a RELEASE build ($tag)"
+          }
+        } else {
+          echo "type=dev" >> $env:GITHUB_OUTPUT
+          echo "is_release=false" >> $env:GITHUB_OUTPUT
+          echo "::notice::This is a DEV build"
+        }
+    
+    - name: Publish
+      if: steps.release-type.outputs.is_release == 'true'
+      run: dotnet publish ${{ env.PROJECT_PATH }} --configuration Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
+    
+    - name: Upload to GitHub Release
+      if: steps.release-type.outputs.is_release == 'true'
+      uses: softprops/action-gh-release@v2
+      with:
+        files: publish/QRCodeSharer.Desktop.exe
+        prerelease: ${{ steps.release-type.outputs.type == 'prerelease' }}
+        generate_release_notes: true
