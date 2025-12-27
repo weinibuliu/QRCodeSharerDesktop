@@ -1,10 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Data.Converters;
 using Avalonia.Input.Platform;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -14,6 +17,24 @@ using QRCoder;
 
 namespace QRCodeSharer.Desktop.ViewModels;
 
+public class BoolToColorConverter : IValueConverter
+{
+    public static readonly BoolToColorConverter Instance = new();
+    
+    private static readonly IBrush SuccessBrush = new SolidColorBrush(Color.Parse("#6AAF6A"));
+    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#D47070"));
+    
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        return value is true ? SuccessBrush : ErrorBrush;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public enum StatusType { Info, Success, Error }
 
 public class LogEntry
@@ -22,6 +43,7 @@ public class LogEntry
     public string Request { get; set; } = "";
     public string StatusCode { get; set; } = "";
     public string ElapsedMs { get; set; } = "";
+    public bool IsSuccess { get; set; }
 }
 
 public partial class MainViewModel : ObservableObject
@@ -130,14 +152,15 @@ public partial class MainViewModel : ObservableObject
         StatusType = type;
     }
 
-    private void AddLog(string request, int statusCode, long elapsedMs)
+    private void AddLog(string request, int statusCode, long elapsedMs, bool isSuccess = true)
     {
         var entry = new LogEntry
         {
             Time = DateTime.Now.ToString("HH:mm:ss.fff"),
             Request = request,
-            StatusCode = statusCode.ToString(),
-            ElapsedMs = $"{elapsedMs}ms"
+            StatusCode = statusCode > 0 ? statusCode.ToString() : "ERR",
+            ElapsedMs = $"{elapsedMs}ms",
+            IsSuccess = isSuccess
         };
         Logs.Insert(0, entry);
         while (Logs.Count > MaxLogs) Logs.RemoveAt(Logs.Count - 1);
@@ -159,7 +182,7 @@ public partial class MainViewModel : ObservableObject
         try
         {
             var (success, msg, statusCode, elapsedMs) = await _service.TestConnectionAsync(GetSettings());
-            AddLog("GET /", statusCode, elapsedMs);
+            AddLog("GET /", statusCode, elapsedMs, success);
             SetStatus(msg, success ? StatusType.Success : StatusType.Error);
         }
         finally
@@ -216,7 +239,7 @@ public partial class MainViewModel : ObservableObject
         
         // 验证订阅用户是否存在
         var (exists, msg, statusCode, elapsedMs) = await _service.CheckUserExistsAsync(settings, settings.FollowUserId);
-        AddLog("GET /user/get", statusCode, elapsedMs);
+        AddLog("GET /user/get", statusCode, elapsedMs, exists);
         
         if (!exists)
         {
@@ -252,7 +275,7 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 var (success, content, msg, statusCode, elapsedMs) = await _service.DownloadAsync(GetSettings());
-                AddLog("GET /code/get", statusCode, elapsedMs);
+                AddLog("GET /code/get", statusCode, elapsedMs, success);
                 
                 if (success && !string.IsNullOrEmpty(content) && content != DownloadedContent)
                 {

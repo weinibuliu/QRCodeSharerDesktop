@@ -38,8 +38,15 @@
                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumHighBrush}"
                                                        FontFamily="Consolas" Margin="4,0"/>
                                             <TextBlock Grid.Column="2" Text="{Binding StatusCode}" FontSize="10" 
-                                                       FontFamily="Consolas"
-                                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                                       FontFamily="Consolas">
+                                                <TextBlock.Foreground>
+                                                    <Binding Path="IsSuccess">
+                                                        <Binding.Converter>
+                                                            <x:Static Member="vm:BoolToColorConverter.Instance"/>
+                                                        </Binding.Converter>
+                                                    </Binding>
+                                                </TextBlock.Foreground>
+                                            </TextBlock>
                                             <TextBlock Grid.Column="3" Text="{Binding ElapsedMs}" FontSize="10" 
                                                        FontFamily="Consolas" Margin="8,0,0,0"
                                                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
