@@ -35,7 +35,7 @@ public class BoolToColorConverter : IValueConverter
     }
 }
 
-public enum StatusType { Info, Success, Error }
+public enum StatusType { Info, Success, Warning, Error }
 
 public class LogEntry
 {
@@ -199,7 +199,6 @@ public partial class MainViewModel : ObservableObject
         if (clipboard != null)
         {
             await clipboard.SetTextAsync(DownloadedContent);
-            SetStatus("已复制到剪贴板", StatusType.Success);
         }
     }
 
@@ -281,7 +280,7 @@ public partial class MainViewModel : ObservableObject
                     }
                     else
                     {
-                        SetStatus($"内容无变化 ({elapsedMs}ms)", StatusType.Info);
+                        SetStatus($"内容无变化 ({elapsedMs}ms)", StatusType.Warning);
                     }
                 }
                 else if (!success)
