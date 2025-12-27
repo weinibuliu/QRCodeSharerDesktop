@@ -1,0 +1,90 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:QRCodeSharer.Desktop.ViewModels"
+        x:Class="QRCodeSharer.Desktop.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="QRCode Sharer" Width="650" Height="480"
+        MinWidth="580" MinHeight="450"
+        WindowStartupLocation="CenterScreen">
+    
+    <Design.DataContext>
+        <vm:MainViewModel/>
+    </Design.DataContext>
+
+    <Grid Margin="20" ColumnDefinitions="*,Auto,*" 
+          HorizontalAlignment="Center" VerticalAlignment="Center">
+        <!-- 左侧：同步区域 -->
+        <StackPanel Grid.Column="0" Spacing="12" VerticalAlignment="Center" MinWidth="240">
+            <TextBlock Text="同步" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
+
+            <Button Command="{Binding TogglePollingCommand}"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Padding="12">
+                <Panel>
+                    <TextBlock Text="开始同步" IsVisible="{Binding !IsPolling}"/>
+                    <TextBlock Text="停止同步" IsVisible="{Binding IsPolling}"/>
+                </Panel>
+            </Button>
+            
+            <!-- 二维码区域 -->
+            <Panel Width="220" Height="220" HorizontalAlignment="Center">
+                <!-- 占位符（模糊） -->
+                <Image Source="{Binding PlaceholderImage}" Width="220" Height="220" 
+                       IsVisible="{Binding !HasContent}" Opacity="0.2">
+                    <Image.Effect>
+                        <BlurEffect Radius="20"/>
+                    </Image.Effect>
+                </Image>
+                <TextBlock Text="等待同步" IsVisible="{Binding !HasContent}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           FontSize="16" Foreground="Gray"/>
+                <!-- 实际二维码 -->
+                <Image Source="{Binding QrCodeImage}" Width="220" Height="220" 
+                       IsVisible="{Binding HasContent}"/>
+            </Panel>
+            
+            <!-- 更新时间 -->
+            <TextBlock Text="{Binding LastUpdateTime}" HorizontalAlignment="Center" 
+                       Foreground="Gray" FontSize="11" IsVisible="{Binding HasContent}"/>
+            
+            <!-- 复制按钮 -->
+            <Button Content="复制 URL" Command="{Binding CopyContentCommand}"
+                    HorizontalAlignment="Center" IsVisible="{Binding HasContent}"/>
+            
+            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Foreground="Gray" FontSize="11" 
+                       HorizontalAlignment="Center" Margin="0,8,0,0"/>
+        </StackPanel>
+
+        <!-- 分隔线 -->
+        <Border Grid.Column="1" Width="1" Background="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" Margin="20,0"/>
+
+        <!-- 右侧：设置区域 -->
+        <StackPanel Grid.Column="2" Spacing="8" VerticalAlignment="Center" MinWidth="220">
+            <TextBlock Text="设置" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center"/>
+            <StackPanel Spacing="6">
+                <TextBlock Text="主机地址" FontSize="12" Foreground="Gray"/>
+                <TextBox Text="{Binding ServerUrl}" Watermark="https://example.com" LostFocus="OnSettingChanged"/>
+                <TextBlock Text="{Binding ServerUrlError}" Foreground="Red" FontSize="11" 
+                           IsVisible="{Binding ServerUrlError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                
+                <TextBlock Text="用户ID" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
+                <TextBox Text="{Binding UserId}" Watermark="你的用户ID" LostFocus="OnSettingChanged"/>
+                
+                <TextBlock Text="认证密钥" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
+                <TextBox Text="{Binding AuthKey}" PasswordChar="*" Watermark="你的认证密钥" LostFocus="OnSettingChanged"/>
+                
+                <TextBlock Text="订阅ID" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
+                <TextBox Text="{Binding FollowUserId}" Watermark="要订阅的用户ID" LostFocus="OnSettingChanged"/>
+                
+                <TextBlock Text="轮询间隔（毫秒）" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
+                <TextBox Text="{Binding PollInterval}" Width="80" HorizontalAlignment="Left" LostFocus="OnSettingChanged"/>
+                <TextBlock Text="{Binding PollIntervalError}" Foreground="Red" FontSize="11"
+                           IsVisible="{Binding PollIntervalError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                
+                <TextBlock Text="连接超时（毫秒）" FontSize="12" Foreground="Gray" Margin="0,6,0,0"/>
+                <TextBox Text="{Binding Timeout}" Width="80" HorizontalAlignment="Left" LostFocus="OnSettingChanged"/>
+            </StackPanel>
+            
+            <Button Content="测试连接" Command="{Binding TestConnectionCommand}" Margin="0,12,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>
