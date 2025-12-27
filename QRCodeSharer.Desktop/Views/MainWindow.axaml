@@ -4,8 +4,8 @@
         x:Class="QRCodeSharer.Desktop.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         x:Name="MainWin"
-        Title="QRCode Sharer" Width="900" Height="520"
-        MinWidth="600" MinHeight="480"
+        Title="QRCode Sharer" Width="1000" Height="520"
+        MinWidth="650" MinHeight="520"
         WindowStartupLocation="CenterScreen">
     
     <Design.DataContext>

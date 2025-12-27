@@ -24,7 +24,7 @@ public partial class MainWindow : Window
         
         this.GetObservable(BoundsProperty).Subscribe(bounds =>
         {
-            ShowLogPanel = bounds.Width >= 850;
+            ShowLogPanel = bounds.Width >= 950;
         });
     }
 
