@@ -20,8 +20,8 @@ public class LogEntry
 {
     public string Time { get; set; } = "";
     public string Request { get; set; } = "";
-    public string Result { get; set; } = "";
-    public bool IsSuccess { get; set; }
+    public string StatusCode { get; set; } = "";
+    public string ElapsedMs { get; set; } = "";
 }
 
 public partial class MainViewModel : ObservableObject
@@ -130,14 +130,14 @@ public partial class MainViewModel : ObservableObject
         StatusType = type;
     }
 
-    private void AddLog(string request, string result, bool isSuccess)
+    private void AddLog(string request, int statusCode, long elapsedMs)
     {
         var entry = new LogEntry
         {
-            Time = DateTime.Now.ToString("HH:mm:ss"),
+            Time = DateTime.Now.ToString("HH:mm:ss.fff"),
             Request = request,
-            Result = result,
-            IsSuccess = isSuccess
+            StatusCode = statusCode.ToString(),
+            ElapsedMs = $"{elapsedMs}ms"
         };
         Logs.Insert(0, entry);
         while (Logs.Count > MaxLogs) Logs.RemoveAt(Logs.Count - 1);
@@ -158,8 +158,8 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(CanEditSettings));
         try
         {
-            var (success, msg) = await _service.TestConnectionAsync(GetSettings());
-            AddLog("GET /", msg, success);
+            var (success, msg, statusCode, elapsedMs) = await _service.TestConnectionAsync(GetSettings());
+            AddLog("GET /", statusCode, elapsedMs);
             SetStatus(msg, success ? StatusType.Success : StatusType.Error);
         }
         finally
@@ -189,7 +189,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void TogglePolling()
+    private async Task TogglePollingAsync()
     {
         if (IsPolling)
         {
@@ -202,14 +202,33 @@ public partial class MainViewModel : ObservableObject
                 SetStatus("请检查设置", StatusType.Error);
                 return;
             }
-            StartPolling();
+            await StartPollingAsync();
         }
     }
 
-    private void StartPolling()
+    private async Task StartPollingAsync()
     {
+        IsBusy = true;
+        OnPropertyChanged(nameof(CanEditSettings));
+        SetStatus("正在验证用户...", StatusType.Info);
+        
+        var settings = GetSettings();
+        
+        // 验证订阅用户是否存在
+        var (exists, msg, statusCode, elapsedMs) = await _service.CheckUserExistsAsync(settings, settings.FollowUserId);
+        AddLog("GET /user/get", statusCode, elapsedMs);
+        
+        if (!exists)
+        {
+            SetStatus(msg, StatusType.Error);
+            IsBusy = false;
+            OnPropertyChanged(nameof(CanEditSettings));
+            return;
+        }
+        
         _pollCts = new CancellationTokenSource();
         IsPolling = true;
+        IsBusy = false;
         OnPropertyChanged(nameof(CanEditSettings));
         SetStatus("同步已启动", StatusType.Success);
         _ = PollLoopAsync(_pollCts.Token);
@@ -232,8 +251,8 @@ public partial class MainViewModel : ObservableObject
         {
             try
             {
-                var (success, content, msg, elapsedMs) = await _service.DownloadAsync(GetSettings());
-                AddLog("GET /code/get", success ? $"{elapsedMs}ms" : msg, success);
+                var (success, content, msg, statusCode, elapsedMs) = await _service.DownloadAsync(GetSettings());
+                AddLog("GET /code/get", statusCode, elapsedMs);
                 
                 if (success && !string.IsNullOrEmpty(content) && content != DownloadedContent)
                 {
