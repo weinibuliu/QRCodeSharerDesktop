@@ -10,9 +10,10 @@
     <!-- SingleFile settings - include native libraries -->
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     
-    <!-- Trimming settings -->
+    <!-- Trimming settings - more aggressive -->
     <TrimMode>partial</TrimMode>
     <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
   
   <!-- Preserve types used by XAML/reflection -->

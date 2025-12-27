@@ -1,34 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <linker>
-  <!-- Preserve main assembly -->
+  <!-- Only preserve the main assembly fully -->
   <assembly fullname="QRCodeSharer.Desktop" preserve="all" />
-  
-  <!-- Preserve Avalonia core -->
-  <assembly fullname="Avalonia.Base" preserve="all" />
-  <assembly fullname="Avalonia.Controls" preserve="all" />
-  <assembly fullname="Avalonia.Desktop" preserve="all" />
-  <assembly fullname="Avalonia.Markup.Xaml" preserve="all" />
-  <assembly fullname="Avalonia.Metal" preserve="all" />
-  <assembly fullname="Avalonia.MicroCom" preserve="all" />
-  <assembly fullname="Avalonia.OpenGL" preserve="all" />
-  <assembly fullname="Avalonia.Remote.Protocol" preserve="all" />
-  <assembly fullname="Avalonia.Skia" preserve="all" />
-  <assembly fullname="Avalonia.Themes.Fluent" preserve="all" />
-  <assembly fullname="Avalonia.Skia" preserve="all" />
-  <assembly fullname="Avalonia.Fonts.Inter" preserve="all" />
-  
-  <!-- Preserve FluentAvalonia -->
-  <assembly fullname="FluentAvalonia" preserve="all" />
-  
-  <!-- Preserve FluentAvalonia -->
-  <assembly fullname="FluentAvalonia" preserve="all" />
-  <assembly fullname="FluentAvaloniaUI" preserve="all" />
-  
-  <!-- Preserve ReactiveUI and dependencies -->
-  <assembly fullname="Avalonia.ReactiveUI" preserve="all" />
-  <assembly fullname="ReactiveUI" preserve="all" />
-  
-  <!-- Preserve SkiaSharp -->
-  <assembly fullname="SkiaSharp" preserve="all" />
-  <assembly fullname="HarfBuzzSharp" preserve="all" />
 </linker>
