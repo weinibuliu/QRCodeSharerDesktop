@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<linker>
-  <!-- Only preserve the main assembly fully -->
-  <assembly fullname="QRCodeSharer.Desktop" preserve="all" />
-</linker>

@@ -4,16 +4,16 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Data.Converters;
-using Avalonia.Input.Platform;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
+using System.Windows;
+using System.Windows.Data;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QRCodeSharer.Desktop.Models;
 using QRCodeSharer.Desktop.Services;
 using QRCoder;
+using Wpf.Ui.Controls;
 
 namespace QRCodeSharer.Desktop.ViewModels;
 
@@ -21,8 +21,8 @@ public class BoolToColorConverter : IValueConverter
 {
     public static readonly BoolToColorConverter Instance = new();
     
-    private static readonly IBrush SuccessBrush = new SolidColorBrush(Color.Parse("#6AAF6A"));
-    private static readonly IBrush ErrorBrush = new SolidColorBrush(Color.Parse("#D47070"));
+    private static readonly SolidColorBrush SuccessBrush = new(Color.FromRgb(106, 175, 106));
+    private static readonly SolidColorBrush ErrorBrush = new(Color.FromRgb(212, 112, 112));
     
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -60,19 +60,31 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _status = "";
     [ObservableProperty] private StatusType _statusType = StatusType.Info;
     [ObservableProperty] private string _downloadedContent = "";
-    [ObservableProperty] private Bitmap? _qrCodeImage;
-    [ObservableProperty] private Bitmap? _placeholderImage;
+    [ObservableProperty] private BitmapImage? _qrCodeImage;
+    [ObservableProperty] private BitmapImage? _placeholderImage;
     [ObservableProperty] private bool _isPolling;
     [ObservableProperty] private bool _hasContent;
     [ObservableProperty] private string _lastUpdateTime = "";
     [ObservableProperty] private string _serverUrlError = "";
     [ObservableProperty] private string _pollIntervalError = "";
     [ObservableProperty] private bool _isBusy;
-    
+    [ObservableProperty] private bool _showLogPanel;
+
     public ObservableCollection<LogEntry> Logs { get; } = new();
     private const int MaxLogs = 100;
 
     public bool CanEditSettings => !IsPolling && !IsBusy;
+    public bool HasStatus => !string.IsNullOrEmpty(Status);
+    public bool HasServerUrlError => !string.IsNullOrEmpty(ServerUrlError);
+    public bool HasPollIntervalError => !string.IsNullOrEmpty(PollIntervalError);
+    
+    public InfoBarSeverity InfoBarSeverity => StatusType switch
+    {
+        StatusType.Success => InfoBarSeverity.Success,
+        StatusType.Warning => InfoBarSeverity.Warning,
+        StatusType.Error => InfoBarSeverity.Error,
+        _ => InfoBarSeverity.Informational
+    };
 
     public MainViewModel()
     {
@@ -94,8 +106,19 @@ public partial class MainViewModel : ObservableObject
         using var qrCodeData = qrGenerator.CreateQrCode(uuid, QRCodeGenerator.ECCLevel.M);
         using var qrCode = new PngByteQRCode(qrCodeData);
         var pngBytes = qrCode.GetGraphic(10);
-        using var stream = new MemoryStream(pngBytes);
-        PlaceholderImage = new Bitmap(stream);
+        PlaceholderImage = BytesToBitmapImage(pngBytes);
+    }
+
+    private static BitmapImage BytesToBitmapImage(byte[] bytes)
+    {
+        var image = new BitmapImage();
+        using var stream = new MemoryStream(bytes);
+        image.BeginInit();
+        image.CacheOption = BitmapCacheOption.OnLoad;
+        image.StreamSource = stream;
+        image.EndInit();
+        image.Freeze();
+        return image;
     }
 
     private AppSettings GetSettings() => new()
@@ -113,15 +136,18 @@ public partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(ServerUrl))
         {
             ServerUrlError = "";
+            OnPropertyChanged(nameof(HasServerUrlError));
             return true;
         }
         if (!ServerUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
             !ServerUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             ServerUrlError = "必须以 http:// 或 https:// 开头";
+            OnPropertyChanged(nameof(HasServerUrlError));
             return false;
         }
         ServerUrlError = "";
+        OnPropertyChanged(nameof(HasServerUrlError));
         return true;
     }
 
@@ -130,9 +156,11 @@ public partial class MainViewModel : ObservableObject
         if (!int.TryParse(PollInterval, out var val) || val <= 0)
         {
             PollIntervalError = "必须为正整数";
+            OnPropertyChanged(nameof(HasPollIntervalError));
             return false;
         }
         PollIntervalError = "";
+        OnPropertyChanged(nameof(HasPollIntervalError));
         return true;
     }
 
@@ -147,20 +175,25 @@ public partial class MainViewModel : ObservableObject
     {
         Status = message;
         StatusType = type;
+        OnPropertyChanged(nameof(HasStatus));
+        OnPropertyChanged(nameof(InfoBarSeverity));
     }
 
     private void AddLog(string request, int statusCode, long elapsedMs, bool isSuccess = true)
     {
-        var entry = new LogEntry
+        Application.Current.Dispatcher.Invoke(() =>
         {
-            Time = DateTime.Now.ToString("HH:mm:ss.fff"),
-            Request = request,
-            StatusCode = statusCode > 0 ? statusCode.ToString() : "ERR",
-            ElapsedMs = $"{elapsedMs}ms",
-            IsSuccess = isSuccess
-        };
-        Logs.Insert(0, entry);
-        while (Logs.Count > MaxLogs) Logs.RemoveAt(Logs.Count - 1);
+            var entry = new LogEntry
+            {
+                Time = DateTime.Now.ToString("HH:mm:ss.fff"),
+                Request = request,
+                StatusCode = statusCode > 0 ? statusCode.ToString() : "ERR",
+                ElapsedMs = $"{elapsedMs}ms",
+                IsSuccess = isSuccess
+            };
+            Logs.Insert(0, entry);
+            while (Logs.Count > MaxLogs) Logs.RemoveAt(Logs.Count - 1);
+        });
     }
 
     [RelayCommand]
@@ -190,16 +223,10 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task CopyContentAsync()
+    private void CopyContent()
     {
         if (string.IsNullOrEmpty(DownloadedContent)) return;
-        var clipboard = Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-            ? desktop.MainWindow?.Clipboard
-            : null;
-        if (clipboard != null)
-        {
-            await clipboard.SetTextAsync(DownloadedContent);
-        }
+        Clipboard.SetText(DownloadedContent);
     }
 
     [RelayCommand]
@@ -227,8 +254,6 @@ public partial class MainViewModel : ObservableObject
         SetStatus("正在验证用户...", StatusType.Info);
         
         var settings = GetSettings();
-        
-        // 验证订阅用户是否存在
         var (exists, msg, statusCode, elapsedMs) = await _service.CheckUserExistsAsync(settings, settings.FollowUserId);
         AddLog("GET /user/get", statusCode, elapsedMs, exists);
         
@@ -288,7 +313,6 @@ public partial class MainViewModel : ObservableObject
                     SetStatus($"{msg} ({elapsedMs}ms)", StatusType.Error);
                 }
                 
-                // 补足间隔时间
                 var sleepMs = intervalMs - (int)elapsedMs;
                 if (sleepMs > 0)
                 {
@@ -313,7 +337,10 @@ public partial class MainViewModel : ObservableObject
         using var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.M);
         using var qrCode = new PngByteQRCode(qrCodeData);
         var pngBytes = qrCode.GetGraphic(10);
-        using var stream = new MemoryStream(pngBytes);
-        QrCodeImage = new Bitmap(stream);
+        
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            QrCodeImage = BytesToBitmapImage(pngBytes);
+        });
     }
 }
