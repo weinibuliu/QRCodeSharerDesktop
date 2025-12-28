@@ -52,8 +52,11 @@ public partial class App : Application
             var logPath = Path.Combine(logDir, $"crash_{DateTime.Now:yyyyMMdd_HHmmss}.log");
             File.WriteAllText(logPath, $"{DateTime.Now}\n{ex}");
         }
-        catch { }
-        
+        catch
+        {
+            // ignored
+        }
+
         // 显示错误弹窗
         MessageBox(IntPtr.Zero, msg, "QRCodeSharer 发生错误", 0x10);
     }
