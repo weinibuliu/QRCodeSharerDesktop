@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:vm="clr-namespace:QRCodeSharer.Desktop.ViewModels"
-        Title="QRCode Sharer" Width="1000" Height="520"
-        MinWidth="650" MinHeight="520"
+        Title="QRCode Sharer" Width="850" Height="620"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica">
@@ -80,79 +80,91 @@
 
             <!-- 中间：同步区域 -->
             <Grid Grid.Column="2" Margin="10,0">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <ui:Button Command="{Binding TogglePollingCommand}"
-                               HorizontalAlignment="Center" Padding="16,10" MinWidth="200"
-                               Appearance="Primary">
-                        <ui:Button.Content>
-                            <TextBlock>
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Text" Value="开始同步"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- 按钮 -->
+                <ui:Button Grid.Row="0" Command="{Binding TogglePollingCommand}"
+                           HorizontalAlignment="Center" Padding="16,10" MinWidth="200"
+                           Appearance="Primary">
+                    <ui:Button.Content>
+                        <TextBlock>
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="开始同步"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPolling}" Value="True">
+                                            <Setter Property="Text" Value="停止同步"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </ui:Button.Content>
+                </ui:Button>
+                
+                <!-- 状态提示（固定高度避免布局偏移） -->
+                <Border Grid.Row="1" Margin="0,8,0,0" MinWidth="280" Height="56" HorizontalAlignment="Center">
+                    <ui:InfoBar Title="" Message="{Binding Status}" 
+                                Severity="{Binding InfoBarSeverity}"
+                                IsOpen="True" IsClosable="False"/>
+                </Border>
+                
+                <!-- 二维码区域（Viewbox 随窗口自适应，内部固定 300x300） -->
+                <Viewbox Grid.Row="2" Margin="0,8" Stretch="Uniform"
+                         HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Width="300" Height="300"
+                            Background="{ui:ThemeResource ControlFillColorDefaultBrush}" 
+                            CornerRadius="8">
+                        <Grid Margin="10">
+                            <Image Source="{Binding PlaceholderImage}" Stretch="Uniform" Opacity="0.4">
+                                <Image.Style>
+                                    <Style TargetType="Image">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsPolling}" Value="True">
-                                                <Setter Property="Text" Value="停止同步"/>
+                                            <DataTrigger Binding="{Binding HasContent}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </ui:Button.Content>
-                    </ui:Button>
-                    
-                    <!-- 状态提示 -->
-                    <Border Margin="0,12,0,0" MinWidth="180" MinHeight="32"
-                            Visibility="{Binding HasStatus, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ui:InfoBar Title="" Message="{Binding Status}" 
-                                    Severity="{Binding InfoBarSeverity}"
-                                    IsOpen="{Binding HasStatus}" IsClosable="False"/>
+                                </Image.Style>
+                                <Image.Effect>
+                                    <BlurEffect Radius="15"/>
+                                </Image.Effect>
+                            </Image>
+                            <Border Background="{ui:ThemeResource ControlFillColorSecondaryBrush}" 
+                                    CornerRadius="4" Padding="12,6"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasContent}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="等待同步" FontSize="13" Opacity="0.6"/>
+                            </Border>
+                            <Image Source="{Binding QrCodeImage}" Stretch="Uniform"
+                                   Visibility="{Binding HasContent, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </Grid>
                     </Border>
-                    
-                    <!-- 二维码区域 -->
-                    <Grid Width="320" Height="320" Margin="0,12,0,0">
-                        <Image Source="{Binding PlaceholderImage}" Stretch="Uniform" Opacity="0.4">
-                            <Image.Style>
-                                <Style TargetType="Image">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding HasContent}" Value="False">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Image.Style>
-                            <Image.Effect>
-                                <BlurEffect Radius="15"/>
-                            </Image.Effect>
-                        </Image>
-                        <Border Background="{ui:ThemeResource ControlFillColorDefaultBrush}" 
-                                CornerRadius="4" Padding="12,6"
-                                HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding HasContent}" Value="False">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <TextBlock Text="等待同步" FontSize="13" Opacity="0.6"/>
-                        </Border>
-                        <Image Source="{Binding QrCodeImage}" Stretch="Uniform"
-                               Visibility="{Binding HasContent, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                    </Grid>
-                    
-                    <!-- 更新时间 + 复制按钮 -->
-                    <StackPanel Margin="0,8,0,0" HorizontalAlignment="Center"
-                                Visibility="{Binding HasContent, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock Text="{Binding LastUpdateTime}" HorizontalAlignment="Center" 
-                                   Opacity="0.6" FontSize="12"/>
-                        <ui:Button Content="复制 URL" Command="{Binding CopyContentCommand}"
-                                   HorizontalAlignment="Center" Padding="16,8" Margin="0,8,0,0"
-                                   Appearance="Secondary"/>
-                    </StackPanel>
+                </Viewbox>
+                
+                <!-- 更新时间 + 复制按钮 -->
+                <StackPanel Grid.Row="3" HorizontalAlignment="Center"
+                            Visibility="{Binding HasContent, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="{Binding LastUpdateTime}" HorizontalAlignment="Center" 
+                               Opacity="0.6" FontSize="12"/>
+                    <ui:Button Content="复制 URL" Command="{Binding CopyContentCommand}"
+                               HorizontalAlignment="Center" Padding="16,8" Margin="0,8,0,0"
+                               Appearance="Secondary"/>
                 </StackPanel>
             </Grid>
 
@@ -161,7 +173,7 @@
                     Background="{ui:ThemeResource ControlStrokeColorDefaultBrush}" Margin="20,0"/>
 
             <!-- 右侧：设置区域 -->
-            <Grid Grid.Column="4" MinWidth="220">
+            <Grid Grid.Column="4" Width="220">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -171,8 +183,9 @@
                 
                 <StackPanel Grid.Row="1" IsEnabled="{Binding CanEditSettings}">
                     <TextBlock Text="主机地址" FontSize="12" Opacity="0.6"/>
-                    <ui:TextBox Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}" 
+                    <ui:PasswordBox Password="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
                                 PlaceholderText="https://example.com" Margin="0,4,0,0"
+                                MaxLength="128"
                                 LostFocus="OnSettingChanged"/>
                     <TextBlock Text="{Binding ServerUrlError}" Foreground="#E81123" FontSize="11" 
                                Visibility="{Binding HasServerUrlError, Converter={StaticResource BooleanToVisibilityConverter}}"
@@ -186,6 +199,7 @@
                     <TextBlock Text="认证密钥" FontSize="12" Opacity="0.6" Margin="0,10,0,0"/>
                     <ui:PasswordBox Password="{Binding AuthKey, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
                                     PlaceholderText="你的认证密钥" Margin="0,4,0,0"
+                                    MaxLength="64"
                                     LostFocus="OnSettingChanged"/>
                     
                     <TextBlock Text="订阅 ID" FontSize="12" Opacity="0.6" Margin="0,10,0,0"/>
@@ -195,7 +209,7 @@
                     
                     <TextBlock Text="轮询间隔（毫秒）" FontSize="12" Opacity="0.6" Margin="0,10,0,0"/>
                     <ui:TextBox Text="{Binding PollInterval, UpdateSourceTrigger=PropertyChanged}" 
-                                Width="100" HorizontalAlignment="Left" Margin="0,4,0,0"
+                                Margin="0,4,0,0"
                                 LostFocus="OnSettingChanged"/>
                     <TextBlock Text="{Binding PollIntervalError}" Foreground="#E81123" FontSize="11"
                                Visibility="{Binding HasPollIntervalError, Converter={StaticResource BooleanToVisibilityConverter}}"
@@ -203,7 +217,7 @@
                     
                     <TextBlock Text="连接超时（毫秒）" FontSize="12" Opacity="0.6" Margin="0,10,0,0"/>
                     <ui:TextBox Text="{Binding Timeout, UpdateSourceTrigger=PropertyChanged}" 
-                                Width="100" HorizontalAlignment="Left" Margin="0,4,0,0"
+                                Margin="0,4,0,0"
                                 LostFocus="OnSettingChanged"/>
                     
                     <ui:Button Content="测试连接" Command="{Binding TestConnectionCommand}" 

@@ -57,7 +57,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _followUserId = "";
     [ObservableProperty] private string _pollInterval = "500";
     [ObservableProperty] private string _timeout = "5000";
-    [ObservableProperty] private string _status = "";
+    [ObservableProperty] private string _status = "等待同步";
     [ObservableProperty] private StatusType _statusType = StatusType.Info;
     [ObservableProperty] private string _downloadedContent = "";
     [ObservableProperty] private BitmapImage? _qrCodeImage;
